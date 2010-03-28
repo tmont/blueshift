@@ -4,6 +4,7 @@
 	
 	use BlueShift\Container;
 	use stdClass;
+	use ReflectionClass;
 
 	class ContainerTest extends \PHPUnit_Framework_TestCase {
 
@@ -46,7 +47,7 @@
 			$builder
 				->expects($this->once())
 				->method('build')
-				->with('BlueShiftTests\FooImplementation')
+				->with(new ReflectionClass('BlueShiftTests\FooImplementation'))
 				->will($this->returnValue($instance));
 			
 			$this->container = new Container($builder);
@@ -67,7 +68,7 @@
 			$builder
 				->expects($this->once())
 				->method('build')
-				->with('BlueShiftTests\FooImplementation')
+				->with(new ReflectionClass('BlueShiftTests\FooImplementation'))
 				->will($this->returnValue($instance));
 			
 			$this->container = new Container($builder);
@@ -75,42 +76,12 @@
 			
 			self::assertSame($instance, $resolvedInstance);
 		}
-		
-		public function testDependencyGeneration() {
-			$dependencies = $this->container->getDependencies('BlueShiftTests\Baz');
-			self::assertEquals(array('BlueShiftTests\Bar', 'BlueShiftTests\Foo'), $dependencies);
-		}
-		
-		public function testDependencyGenerationWithTypeWithNonPublicConstructor() {
-			$this->setExpectedException('BlueShift\InvalidConstructorException');
-			$this->container->getDependencies('BlueShiftTests\BadConstructor1', 'Cannot instantiate object of type BlueShiftTests\BadConstructor1 because its constructor is not public');
-		}
-		
-		public function testDependencyGenerationWithTypeThatHasInvalidDependencyConstructor() {
-			$this->setExpectedException('BlueShift\InvalidConstructorException');
-			$this->container->getDependencies('BlueShiftTests\BadConstructor2', 'Unable to resolve dependency for type ReflectionClass because constructor has invalid signature at position 1');
-		}
 
 	}
 	
 	//-- begin mocks --//
 	interface Foo {}
 	class FooImplementation implements Foo {}
-	class Bar {
-		public function __construct(Foo $foo1, Foo $foo2) {}
-	}
-	
-	class Baz {
-		public function __construct(Bar $bar) {}
-	}
-	
-	class BadConstructor1 {
-		private function __construct() {}
-	}
-	
-	class BadConstructor2 {
-		public function __construct(\ReflectionClass $class) {}
-	}
 	//-- end mocks --//
 
 ?>

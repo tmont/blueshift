@@ -9,11 +9,26 @@
 
 		private $typeMappings = array();
 		private $registeredInstances = array();
-		private $dependencyCache = array();
 		private $objectBuilder;
 
 		public function __construct(ObjectBuilder $objectBuilder = null) {
 			$this->objectBuilder = $objectBuilder ?: new ObjectBuilder();
+		}
+		
+		protected final function addTypeMapping($abstract, $concrete) {
+			$this->typeMappings[$abstract] = $concrete;
+		}
+		
+		protected final function getMapping($abstract) {
+			return @$this->typeMappings[$abstract];
+		}
+
+		protected final function addInstance($abstract, $instance) {
+			$this->registeredInstances[$abstract] = $instance;
+		}
+		
+		protected final function getInstance($abstract) {
+			return @$this->registeredInstances[$abstract];
 		}
 		
 		/**
@@ -60,26 +75,17 @@
 			return $this;
 		}
 
-		protected final function addTypeMapping($abstract, $concrete) {
-			$this->typeMappings[$abstract] = $concrete;
-		}
-
-		protected final function addInstance($abstract, $instance) {
-			$this->registeredInstances[$abstract] = $instance;
-		}
-		
-		protected final function getMapping($abstract) {
-			return @$this->typeMappings[$abstract];
-		}
-		
-		protected final function getInstance($abstract) {
-			return @$this->registeredInstances[$abstract];
-		}
-
 		/**
 		 * Resolves the specified interface or class to an instance
 		 *
+		 * If there is no mapping for the specified type and it's able to be
+		 * instantiated (e.g. not abstract and not an interface), then it will
+		 * just resolve to whatever instance the object builder creates, like
+		 * a normal type that was mapped. In short, this method will resolve
+		 * unmapped types that are able to be constructed.
+		 *
 		 * @param  string $typeToResolve
+		 * @throws {@link ResolutionException}
 		 * @return object An instance of the specified type
 		 */
 		public function resolve($type) {
@@ -88,7 +94,9 @@
 			if ($instance !== null) {
 				return $instance;
 			}
-
+			
+			$refClass = null;
+			
 			//finally, check if the type has a mapping, and then create it
 			$concreteType = $this->getMapping($type);
 			if ($concreteType === null) {
@@ -97,50 +105,14 @@
 				if (!$refClass->isInstantiable()) {
 					throw new ResolutionException("The type $type has not been mapped and is not instantiable");
 				}
-
-				unset($refClass);
-				$concreteType = $type;
+			} else {
+				$refClass = new ReflectionClass($concreteType);
 			}
 
-			$instance = $this->objectBuilder->build($concreteType, $this);
+			$instance = $this->objectBuilder->build($refClass);
 			return $instance;
 		}
 
-		/**
-		 * Gets an array of all classes that the specified type is dependent on
-		 * upon if it were to be constructed by the container
-		 *
-		 * @param  string $type
-		 * @throws {@link InvalidConstructorException} if the type or one of its dependencies has an invalid constructor
-		 * @return array
-		 */
-		public function getDependencies($type) {
-			if (isset($this->dependencyCache[$type])) {
-				return $this->dependencyCache[$type];
-			}
-
-			$this->dependencyCache[$type] = array();
-
-			$refClass = new ReflectionClass($type);
-			$constructor = $refClass->getConstructor();
-			if ($constructor !== null && !$constructor->isPublic()) {
-				throw new InvalidConstructorException('Cannot instantiate object of type ' . $type . ' because its constructor is not public');
-			}
-
-			//if constructor is null, then one is not defined, so that means the default parameterless constructor will be used and has no dependencies
-			$dependentTypes = ($constructor !== null) ? ReflectionUtil::getConstructorSignature($constructor) : array();
-
-			foreach ($dependentTypes as $i => $dependentType) {
-				if ($dependentType === null) {
-					throw new InvalidConstructorException('Unable to resolve dependency for type ' . $type . ' because constructor signature has an invalid type at position ' . ($i + 1));
-				}
-				
-				$this->dependencyCache[$type][] = $dependentType;
-				$this->dependencyCache[$type] += $this->getDependencies($dependentType);
-			}
-
-			return $this->dependencyCache[$type];
-		}
 	}
 
 ?>

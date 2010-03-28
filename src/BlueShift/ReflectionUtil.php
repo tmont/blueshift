@@ -9,6 +9,10 @@
 
 		private function __construct() {}
 
+		public static function isProxyable(ReflectionClass $class) {
+			return !$class->isFinal();
+		}
+		
 		public static function getConstructorSignature(ReflectionMethod $constructor) {
 			$params = $constructor->getParameters();
 			$signature = array();
