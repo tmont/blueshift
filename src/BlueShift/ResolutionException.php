@@ -4,6 +4,6 @@
 
 	use \Exception;
 	
-	class ContainerException extends Exception {}
+	class ResolutionException extends Exception {}
 
 ?>

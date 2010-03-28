@@ -17,8 +17,13 @@
 			$this->container = null;
 		}
 	
+		public function testCannotAddMappingOfWrongType() {
+			$this->setExpectedException('BlueShift\RegistrationException');
+			$this->container->addMapping('BlueShiftTests\Foo', 'stdClass');
+		}
+	
 		public function testCannotRegisterInstanceOfWrongType() {
-			$this->setExpectedException('BlueShift\ContainerException');
+			$this->setExpectedException('BlueShift\RegistrationException');
 			$this->container->registerInstance('BlueShiftTests\Foo', new stdClass());
 		}
 		
@@ -52,7 +57,7 @@
 		}
 		
 		public function testResolveUnmappedUninstantiableType() {
-			$this->setExpectedException('BlueShift\ContainerException');
+			$this->setExpectedException('BlueShift\ResolutionException');
 			$this->container->resolve('BlueShiftTests\Foo');
 		}
 		
