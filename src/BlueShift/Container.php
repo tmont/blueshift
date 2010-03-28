@@ -74,6 +74,14 @@
 			return $instance;
 		}
 
+		/**
+		 * Gets an array of all classes that the specified type is dependent on
+		 * upon if it were to be constructed by the container
+		 *
+		 * @param  string $type
+		 * @throws {@link InvalidConstructorException} if the type or one of its dependencies has an invalid constructor
+		 * @return array
+		 */
 		public function getDependencies($type) {
 			if (isset($this->dependencyCache[$type])) {
 				return $this->dependencyCache[$type];
@@ -83,19 +91,20 @@
 
 			$refClass = new ReflectionClass($type);
 			$constructor = $refClass->getConstructor();
-			if (!$constructor->isPublic()) {
-				throw new ContainerException('Cannot instantiate object of type ' . $type . ' because it does not have a public constructor');
+			if ($constructor !== null && !$constructor->isPublic()) {
+				throw new InvalidConstructorException('Cannot instantiate object of type ' . $type . ' because its constructor is not public');
 			}
 
-			$dependentTypes = ReflectionUtil::getConstructorSignature($constructor);
+			//if constructor is null, then one is not defined, so that means the default parameterless constructor will be used and has no dependencies
+			$dependentTypes = ($constructor !== null) ? ReflectionUtil::getConstructorSignature($constructor) : array();
 
-			foreach ($dependentTypes as $dependentType) {
+			foreach ($dependentTypes as $i => $dependentType) {
 				if ($dependentType === null) {
-					throw new ContainerException('Unable to resolve dependency for type ' . $type . ' because constructor has an incompatible type');
+					throw new InvalidConstructorException('Unable to resolve dependency for type ' . $type . ' because constructor signature has an invalid type at position ' . ($i + 1));
 				}
 				
 				$this->dependencyCache[$type][] = $dependentType;
-				$this->dependencyCache[$type] = array_merge($this->dependencyCache[$type], $this->getDependencies($dependentType));
+				$this->dependencyCache[$type] += $this->getDependencies($dependentType);
 			}
 
 			return $this->dependencyCache[$type];
