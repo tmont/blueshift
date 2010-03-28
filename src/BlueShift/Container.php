@@ -2,17 +2,30 @@
 
 	namespace BlueShift;
 
-	use \InvalidArgumentException;
-	use \ReflectionClass;
+	use InvalidArgumentException;
+	use ReflectionClass;
+	use Serializable;
 
-	class Container {
+	class Container implements Serializable {
 
 		private $typeMappings = array();
 		private $registeredInstances = array();
-		private $objectBuilder;
+		private $dependencyGraph = array();
+		private $reflectionCache = array('classes' => array(), 'constructors' => array());
 
-		public function __construct(ObjectBuilder $objectBuilder = null) {
-			$this->objectBuilder = $objectBuilder ?: new ObjectBuilder();
+		public function serialize() {
+			$data = array(
+				'typeMappings' => $this->typeMappings,
+				'dependencyGraph' => $this->dependencyGraph
+			);
+			
+			return serialize($data);
+		}
+		
+		public function unserialize($data) {
+			$data = unserialize($data);
+			$this->typeMappings = $data['typeMappings'];
+			$this->dependencyGraph = $data['dependencyGraph'];
 		}
 		
 		protected final function addTypeMapping($abstract, $concrete) {
@@ -31,6 +44,31 @@
 			return @$this->registeredInstances[$abstract];
 		}
 		
+		protected final function getClass($type) {
+			$class = @$this->reflectionCache['classes'][$type];
+			if ($class === null) {
+				$this->reflectionCache['classes'][$type] = $class = new ReflectionClass($type);
+			}
+			
+			return $class;
+		}
+		
+		protected final function getConstructor($type) {
+			if (!array_key_exists($type, $this->reflectionCache['constructors'])) {
+				$this->reflectionCache['constructors'][$type] = $this->getClass($type)->getConstructor();
+			}
+			
+			return $this->reflectionCache['constructors'][$type];
+		}
+		
+		public final function getDependencyGraph() {
+			return $this->dependencyGraph;
+		}
+		
+		public final function getMappings() {
+			return $this->typeMappings;
+		}
+		
 		/**
 		 * Registers a mapping between a class or interface and its concrete
 		 * implementation. The concrete implementation will be dynamically created
@@ -42,7 +80,7 @@
 		 * @returns Container
 		 */
 		public function addMapping($abstract, $concrete) {
-			$refClass = new ReflectionClass($concrete);
+			$refClass = $this->getClass($concrete);
 			if (!$refClass->implementsInterface($abstract) && !$refClass->isSubclassOf($abstract)) {
 				throw new RegistrationException('The type ' . $concrete  . ' does not inherit from or implement ' . $abstract);
 			}
@@ -76,6 +114,45 @@
 		}
 
 		/**
+		 * Builds the dependency graph for the specified type and checks for cyclic
+		 * dependencies
+		 *
+		 * @param  string $type
+		 * @throws {@link InvalidConstructorException}
+		 * @throws {@link DependencyException}
+		 */
+		protected final function buildDependencyGraphForType($type) {
+			$constructor = $this->getConstructor($type);
+			if ($constructor !== null && !$constructor->isPublic()) {
+				throw new InvalidConstructorException('The type ' . $type . ' has a non-public constructor and will not be able to be resolved');
+			}
+
+			//if constructor is null, then one is not defined, so that means the default parameterless constructor will be used and has no dependencies
+			$dependentTypes = ($constructor !== null) ? ReflectionUtil::getConstructorSignature($constructor) : array();
+			
+			if (!array_reduce($dependentTypes, function($current, $next) { return $current && $next !== null; }, true)) {
+				throw new InvalidConstructorException(
+					'Dependency graph for ' . $type . ' cannot be built ' .
+					'because its constructor signature contains an unresolvable (e.g. non-typehinted) type'
+				);
+			}
+			
+			$this->dependencyGraph[$type] = $dependentTypes;
+			foreach ($dependentTypes as $dependentType) {
+				if (!isset($this->dependencyGraph[$dependentType])) {
+					$this->buildDependencyGraphForType($dependentType);
+				}
+				
+				//check for cycles
+				foreach ($this->dependencyGraph[$dependentType] as $dependency) {
+					if ($dependency === $type) {
+						throw new DependencyException('A cyclic dependency was detected between ' . $type . ' and ' . $dependentType);
+					}
+				}
+			}
+		}
+		
+		/**
 		 * Resolves the specified interface or class to an instance
 		 *
 		 * If there is no mapping for the specified type and it's able to be
@@ -84,7 +161,7 @@
 		 * a normal type that was mapped. In short, this method will resolve
 		 * unmapped types that are able to be constructed.
 		 *
-		 * @param  string $typeToResolve
+		 * @param  string $type
 		 * @throws {@link ResolutionException}
 		 * @return object An instance of the specified type
 		 */
@@ -95,24 +172,34 @@
 				return $instance;
 			}
 			
-			$refClass = null;
+			//add to dependency graph if not already there
+			if (!isset($this->dependencyGraph[$type])) {
+				$this->buildDependencyGraphForType($type);
+			}
 			
-			//finally, check if the type has a mapping, and then create it
+			//check if the type has a mapping
 			$concreteType = $this->getMapping($type);
 			if ($concreteType === null) {
-				//if it's instantiable, then we just resolve its dependencies
-				$refClass = new ReflectionClass($type);
-				if (!$refClass->isInstantiable()) {
+				//if it's instantiable, add it to the dependency graph
+				$class = $this->getClass($type);
+				if (!$class->isInstantiable()) {
 					throw new ResolutionException("The type $type has not been mapped and is not instantiable");
 				}
 			} else {
-				$refClass = new ReflectionClass($concreteType);
+				$class = $this->getClass($concreteType);
 			}
-
-			$instance = $this->objectBuilder->build($refClass);
-			return $instance;
+			
+			$constructor = $this->getConstructor($type);
+			if ($constructor === null) {
+				//can't call newInstanceArgs if there is no constructor
+				return $class->newInstance();
+			}
+			
+			$that = $this;
+			$args = array_map(function($dependency) use ($that) { return $that->resolve($dependency); }, $this->dependencyGraph[$type]);
+			return $class->newInstanceArgs($args);
 		}
-
+		
 	}
 
 ?>

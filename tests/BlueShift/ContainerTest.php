@@ -17,6 +17,22 @@
 		public function tearDown() {
 			$this->container = null;
 		}
+		
+		public function testSerialization() {
+			$this->container->addMapping('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation');
+			$this->container->resolve('BlueShiftTests\Foo');
+			
+			$mappings = $this->container->getMappings();
+			$dependencyGraph = $this->container->getDependencyGraph();
+			
+			
+			$serialized = serialize($this->container);
+			$container = unserialize($serialized);
+			
+			self::assertType('BlueShift\Container', $container);
+			self::assertEquals($mappings, $container->getMappings());
+			self::assertEquals($dependencyGraph, $container->getDependencyGraph());
+		}
 	
 		public function testCannotAddMappingOfWrongType() {
 			$this->setExpectedException('BlueShift\RegistrationException');
@@ -42,19 +58,9 @@
 		}
 		
 		public function testResolveMappedType() {
-			$instance = new FooImplementation();
-			$builder = $this->getMock('BlueShift\ObjectBuilder', array('build'));
-			$builder
-				->expects($this->once())
-				->method('build')
-				->with(new ReflectionClass('BlueShiftTests\FooImplementation'))
-				->will($this->returnValue($instance));
-			
-			$this->container = new Container($builder);
 			$this->container->addMapping('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation');
 			$resolvedInstance = $this->container->resolve('BlueShiftTests\Foo');
-			
-			self::assertSame($instance, $resolvedInstance);
+			self::assertType('BlueShiftTests\FooImplementation', $resolvedInstance);
 		}
 		
 		public function testResolveUnmappedUninstantiableType() {
@@ -63,25 +69,67 @@
 		}
 		
 		public function testResolveUnmappedInstantiableType() {
-			$instance = new FooImplementation();
-			$builder = $this->getMock('BlueShift\ObjectBuilder', array('build'));
-			$builder
-				->expects($this->once())
-				->method('build')
-				->with(new ReflectionClass('BlueShiftTests\FooImplementation'))
-				->will($this->returnValue($instance));
-			
-			$this->container = new Container($builder);
 			$resolvedInstance = $this->container->resolve('BlueShiftTests\FooImplementation');
-			
-			self::assertSame($instance, $resolvedInstance);
+			self::assertType('BlueShiftTests\FooImplementation', $resolvedInstance);
 		}
 
+		public function testResolveTypeWithNonPublicConstructor() {
+			$this->setExpectedException(
+				'BlueShift\InvalidConstructorException',
+				'The type BlueShiftTests\BadConstructor has a non-public constructor and will not be able to be resolved'
+			);
+			$this->container->resolve('BlueShiftTests\BadConstructor');
+		}
+		
+		public function testResolveTypeWithInvalidConstructorSignature() {
+			$this->setExpectedException(
+				'BlueShift\InvalidConstructorException',
+				'Dependency graph for ReflectionClass cannot be built because its constructor signature contains an unresolvable (e.g. non-typehinted) type'
+			);
+			$this->container->resolve('ReflectionClass');
+		}
+		
+		public function testResolveTypeWithDependencies() {
+			$baz = $this->container->resolve('BlueShiftTests\Baz');
+			self::assertType('BlueShiftTests\Baz', $baz);
+			self::assertType('BlueShiftTests\Bar', $baz->bar);
+			self::assertType('BlueShiftTests\FooImplementation', $baz->bar->foo);
+		}
+		
+		public function testResolveTypeWithACyclicDependency() {
+			$this->setExpectedException('BlueShift\DependencyException', 'A cyclic dependency was detected between BlueShiftTests\Cyclic2 and BlueShiftTests\Cyclic1');
+			$this->container->resolve('BlueShiftTests\Cyclic1');
+		}
+	
 	}
 	
 	//-- begin mocks --//
 	interface Foo {}
 	class FooImplementation implements Foo {}
+	class BadConstructor {
+		private function __construct() {}
+	}
+	
+	class Bar {
+		public $foo;
+		public function __construct(FooImplementation $foo) {
+			$this->foo = $foo;
+		}
+	}
+	
+	class Baz {
+		public $bar;
+		public function __construct(Bar $bar) {
+			$this->bar = $bar;
+		}
+	}
+	
+	class Cyclic1 {
+		public function __construct(Cyclic2 $x) {}
+	}
+	class Cyclic2 {
+		public function __construct(Cyclic1 $x) {}
+	}
 	//-- end mocks --//
 
 ?>
