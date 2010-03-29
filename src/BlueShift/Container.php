@@ -2,6 +2,8 @@
 
 	namespace BlueShift;
 
+	use BlueShift\Util\ReflectionCache;
+	use BlueShift\Util\ReflectionUtil;
 	use InvalidArgumentException;
 	use ReflectionClass;
 	use Serializable;
@@ -11,7 +13,6 @@
 		private $typeMappings = array();
 		private $registeredInstances = array();
 		private $dependencyGraph = array();
-		private $reflectionCache = array('classes' => array(), 'constructors' => array());
 
 		public function serialize() {
 			$data = array(
@@ -44,23 +45,6 @@
 			return @$this->registeredInstances[$abstract];
 		}
 		
-		protected final function getClass($type) {
-			$class = @$this->reflectionCache['classes'][$type];
-			if ($class === null) {
-				$this->reflectionCache['classes'][$type] = $class = new ReflectionClass($type);
-			}
-			
-			return $class;
-		}
-		
-		protected final function getConstructor($type) {
-			if (!array_key_exists($type, $this->reflectionCache['constructors'])) {
-				$this->reflectionCache['constructors'][$type] = $this->getClass($type)->getConstructor();
-			}
-			
-			return $this->reflectionCache['constructors'][$type];
-		}
-		
 		public final function getDependencyGraph() {
 			return $this->dependencyGraph;
 		}
@@ -80,7 +64,7 @@
 		 * @returns Container
 		 */
 		public function addMapping($abstract, $concrete) {
-			$refClass = $this->getClass($concrete);
+			$refClass = ReflectionCache::getClass($concrete);
 			if (!$refClass->implementsInterface($abstract) && !$refClass->isSubclassOf($abstract)) {
 				throw new RegistrationException('The type ' . $concrete  . ' does not inherit from or implement ' . $abstract);
 			}
@@ -104,7 +88,7 @@
 				throw new InvalidArgumentException('2nd argument must be an object');
 			}
 			
-			$refClass = new ReflectionClass($instance);
+			$refClass = ReflectionCache::getClass(get_class($instance));
 			if (!$refClass->implementsInterface($abstract) && !$refClass->isSubclassOf($abstract)) {
 				throw new RegistrationException('The class ' . get_class($instance)  . ' does not inherit from or implement ' . $abstract);
 			}
@@ -122,7 +106,7 @@
 		 * @throws {@link DependencyException}
 		 */
 		protected final function buildDependencyGraphForType($type) {
-			$constructor = $this->getConstructor($type);
+			$constructor = ReflectionCache::getConstructor($type);
 			if ($constructor !== null && !$constructor->isPublic()) {
 				throw new InvalidConstructorException('The type ' . $type . ' has a non-public constructor and will not be able to be resolved');
 			}
@@ -181,15 +165,15 @@
 			$concreteType = $this->getMapping($type);
 			if ($concreteType === null) {
 				//if it's instantiable, add it to the dependency graph
-				$class = $this->getClass($type);
+				$class = ReflectionCache::getClass($type);
 				if (!$class->isInstantiable()) {
 					throw new ResolutionException("The type $type has not been mapped and is not instantiable");
 				}
 			} else {
-				$class = $this->getClass($concreteType);
+				$class = ReflectionCache::getClass($concreteType);
 			}
 			
-			$constructor = $this->getConstructor($type);
+			$constructor = ReflectionCache::getConstructor($type);
 			if ($constructor === null) {
 				//can't call newInstanceArgs if there is no constructor
 				return $class->newInstance();

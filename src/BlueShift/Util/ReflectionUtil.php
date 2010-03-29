@@ -1,7 +1,8 @@
 <?php
 
-	namespace BlueShift;
+	namespace BlueShift\Util;
 	
+	use ReflectionClass;
 	use ReflectionMethod;
 	use Reflector;
 
@@ -18,7 +19,7 @@
 			$signature = array();
 			foreach ($params as $param) {
 				$class = $param->getClass();
-				$signature[$param->getName()] = $class ? ltrim($class->getName(), '\\') : null;
+				$signature[$param->getName()] = $class instanceof ReflectionClass ? ltrim($class->getName(), '\\') : null;
 			}
 
 			return $signature;
