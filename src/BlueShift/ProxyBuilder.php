@@ -4,11 +4,26 @@
 	
 	use ReflectionClass, ReflectionMethod, ReflectionParameter;
 	
+	/**
+	 * Class that dynamically builds interceptable proxies
+	 *
+	 * @package BlueShift
+	 */
 	class ProxyBuilder {
 		
 		private $proxyCache = array();
 		const DEFAULT_NAMESPACE = 'BlueShift';
 		
+		/**
+		 * Creates an interceptable proxy of the given class
+		 *
+		 * @uses   ReflectionCache::getClass()
+		 * @uses   ReflectionUtil::isProxyable()
+		 * @param  ReflectionClass $class The class to proxy, must be non-final and instantiable
+		 * @param  array           $args  Constructor arguments
+		 * @throws {@link ProxyException} if the class cannot be proxied
+		 * @return object
+		 */
 		public function build(ReflectionClass $class, array $args = array()) {
 			$name = $class->getName();
 			if (!isset($this->proxyCache[$name])) {
@@ -27,6 +42,21 @@
 			}
 		}
 		
+		/**
+		 * Generates a unique proxy name for the given class
+		 *
+		 * @param  ReflectionClass $class
+		 * @return string
+		 */
+		protected function generateClassName(ReflectionClass $class) {
+			$prefix = 'BlueShiftProxy_' . str_replace('\\', '_', $class->getName());
+			do {
+				$name = $prefix . '_' . uniqid();
+			} while (class_exists(self::DEFAULT_NAMESPACE . '\\' . $name) || interface_exists(self::DEFAULT_NAMESPACE . '\\' . $name));
+			
+			return $name;
+		}
+		
 		private function buildProxy(ReflectionClass $class) {
 			$name = $this->generateClassName($class);
 			
@@ -36,15 +66,6 @@
 			eval($code);
 			
 			return self::DEFAULT_NAMESPACE . '\\' . $name;
-		}
-		
-		protected function generateClassName(ReflectionClass $class) {
-			$prefix = 'BlueShiftProxy_' . str_replace('\\', '_', $class->getName());
-			do {
-				$name = $prefix . '_' . uniqid();
-			} while (class_exists(self::DEFAULT_NAMESPACE . '\\' . $name) || interface_exists(self::DEFAULT_NAMESPACE . '\\' . $name));
-			
-			return $name;
 		}
 		
 		private function buildNamespace(ReflectionClass $class) {

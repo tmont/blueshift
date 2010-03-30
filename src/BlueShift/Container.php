@@ -4,6 +4,12 @@
 
 	use InvalidArgumentException, ReflectionClass, Serializable, Closure;
 
+	/**
+	 * Represents a container for creating objects and automatically
+	 * handling dependencies between objects
+	 *
+	 * @package BlueShift
+	 */
 	class Container implements Serializable {
 
 		private $typeMappings = array();
@@ -12,16 +18,40 @@
 		private $proxyBuilder;
 		private $typesToProxy = array();
 
+		/**
+		 * Sets the object to be used for creating proxies
+		 *
+		 * @param  ProxyBuilder
+		 * @return Container
+		 */
 		public final function setProxyBuilder(ProxyBuilder $builder) {
 			$this->proxyBuilder = $builder;
 			return $this;
 		}
 		
+		/**
+		 * Gets the injected proxy builder, or creates a default one
+		 *
+		 * @return ProxyBuilder
+		 */
+		public final function getProxyBuilder() {
+			return $this->proxyBuilder ?: ($this->proxyBuilder = new ProxyBuilder());
+		}
+		
+		/**
+		 * Informs the container to create a proxy of this type when it is resolved.
+		 * This must be called regardless of whether any interceptors are registered.
+		 *
+		 * @return Container
+		 */
 		public final function proxyType($type) {
 			$this->typesToProxy[] = $type;
 			return $this;
 		}
 
+		/**
+		 * @ignore
+		 */
 		public function serialize() {
 			$data = array(
 				'typeMappings' => $this->typeMappings,
@@ -31,6 +61,9 @@
 			return serialize($data);
 		}
 		
+		/**
+		 * @ignore
+		 */
 		public function unserialize($data) {
 			$data = unserialize($data);
 			$this->typeMappings = $data['typeMappings'];
@@ -53,10 +86,20 @@
 			return @$this->registeredInstances[$abstract];
 		}
 		
+		/**
+		 * Gets the dependency graph for types that have already been resolved
+		 *
+		 * @return array
+		 */
 		public final function getDependencyGraph() {
 			return $this->dependencyGraph;
 		}
 		
+		/**
+		 * Gets a list of registered type mappings
+		 *
+		 * @return array
+		 */
 		public final function getMappings() {
 			return $this->typeMappings;
 		}
@@ -205,7 +248,7 @@
 			}
 			
 			if (in_array($type, $this->typesToProxy)) {
-				return $this->proxyBuilder->build($class, $args);
+				return $this->getProxyBuilder()->build($class, $args);
 			}
 			
 			return ($constructor === null) ? $class->newInstance() : $class->newInstanceArgs($args);
