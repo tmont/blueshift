@@ -2,11 +2,7 @@
 
 	namespace BlueShift;
 	
-	use ReflectionClass;
-	use ReflectionMethod;
-	use ReflectionParameter;
-	use BlueShift\Util\ReflectionUtil;
-	use BlueShift\Util\ReflectionCache;
+	use ReflectionClass, ReflectionMethod, ReflectionParameter;
 	
 	class ProxyBuilder {
 		

@@ -2,8 +2,7 @@
 
 	namespace BlueShift;
 
-	use Closure;
-	use ReflectionMethod;
+	use Closure, ReflectionMethod;
 	
 	final class InterceptorCache {
 		

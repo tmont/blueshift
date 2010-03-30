@@ -2,12 +2,7 @@
 
 	namespace BlueShift;
 
-	use BlueShift\Util\ReflectionCache;
-	use BlueShift\Util\ReflectionUtil;
-	use InvalidArgumentException;
-	use ReflectionClass;
-	use Serializable;
-	use Closure;
+	use InvalidArgumentException, ReflectionClass, Serializable, Closure;
 
 	class Container implements Serializable {
 

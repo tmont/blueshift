@@ -1,6 +1,6 @@
 <?php
 
-	namespace BlueShift\Util;
+	namespace BlueShift;
 	
 	use ReflectionClass;
 
@@ -23,6 +23,7 @@
 		
 		public static function getConstructor($type) {
 			if (!array_key_exists($type, self::$constructors)) {
+				//this value can be null for types that don't have constructors
 				self::$constructors[$type] = self::getClass($type)->getConstructor();
 			}
 			
