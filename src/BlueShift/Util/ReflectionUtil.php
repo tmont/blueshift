@@ -11,7 +11,7 @@
 		private function __construct() {}
 
 		public static function isProxyable(ReflectionClass $class) {
-			return !$class->isFinal();
+			return !$class->isFinal() && $class->isInstantiable();
 		}
 		
 		public static function getConstructorSignature(ReflectionMethod $constructor) {

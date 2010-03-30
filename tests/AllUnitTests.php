@@ -52,7 +52,6 @@
 			$suite = new \PHPUnit_Framework_TestSuite('All Blue Shift Unit Tests');
 			
 			foreach ($GLOBALS['test_classes'] as $class) {
-				echo $class. "\n";
 				$suite->addTestSuite($class);
 			}
 			

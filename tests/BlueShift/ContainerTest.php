@@ -5,6 +5,7 @@
 	use BlueShift\Container;
 	use stdClass;
 	use ReflectionClass;
+	use BlueShift\InterceptorCache;
 
 	class ContainerTest extends \PHPUnit_Framework_TestCase {
 
@@ -12,10 +13,12 @@
 	
 		public function setUp() {
 			$this->container = new Container();
+			InterceptorCache::reset();
 		}
 		
 		public function tearDown() {
 			$this->container = null;
+			InterceptorCache::reset();
 		}
 		
 		public function testSerialization() {
