@@ -15,7 +15,7 @@
 		private $registeredInstances = array();
 		private $dependencyGraph = array();
 		private $proxyBuilder;
-		private $proxiedTypes = array();
+		private $typesToProxy = array();
 
 		public final function setProxyBuilder(ProxyBuilder $builder) {
 			$this->proxyBuilder = $builder;
@@ -23,7 +23,7 @@
 		}
 		
 		public final function proxyType($type) {
-			$this->proxiedTypes[] = $type;
+			$this->typesToProxy[] = $type;
 			return $this;
 		}
 
@@ -70,15 +70,15 @@
 		 * Registers an interceptor for any resolved type that matches the filter
 		 * expression
 		 * 
-		 * This method is merely a wrapper for {@link InterceptorCache::addInterceptor()}.
+		 * This method is merely a wrapper for {@link InterceptorCache::registerInterceptor()}.
 		 *
-		 * @uses    InterceptorCache::addInterceptor()
+		 * @uses    InterceptorCache::registerInterceptor()
 		 * @param   Interceptor $interceptor Interceptor implementation to register
 		 * @param   Closure     $matcher     Predicate that takes a ReflectionClass as an argument and returns a boolean
 		 * @returns Container
 		 */
-		public function addInterceptor(Interceptor $interceptor, Closure $matcher) {
-			InterceptorCache::addInterceptor($interceptor, $matcher);
+		public function registerInterceptor(Interceptor $interceptor, Closure $matcher) {
+			InterceptorCache::registerInterceptor($interceptor, $matcher);
 			return $this;
 		}
 		
@@ -209,7 +209,7 @@
 				$args = array_map(function($dependency) use ($that) { return $that->resolve($dependency); }, $this->dependencyGraph[$type]);
 			}
 			
-			if (in_array($class->getName(), $this->proxiedTypes) && ReflectionUtil::isProxyable($class)) {
+			if (in_array($type, $this->typesToProxy)) {
 				return $this->proxyBuilder->build($class, $args);
 			}
 			

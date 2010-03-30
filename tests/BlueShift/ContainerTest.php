@@ -4,7 +4,7 @@
 	
 	use BlueShift\Container;
 	use stdClass;
-	use ReflectionClass;
+	use ReflectionClass, ReflectionMethod;
 	use BlueShift\InterceptorCache;
 
 	class ContainerTest extends \PHPUnit_Framework_TestCase {
@@ -102,6 +102,24 @@
 		public function testResolveTypeWithACyclicDependency() {
 			$this->setExpectedException('BlueShift\DependencyException', 'A cyclic dependency was detected between BlueShiftTests\Cyclic2 and BlueShiftTests\Cyclic1');
 			$this->container->resolve('BlueShiftTests\Cyclic1');
+		}
+		
+		public function testResolveUsingProxybuilder() {
+			$builder = $this->getMock('BlueShift\ProxyBuilder', array('build'));
+			$builder->expects($this->once())->method('build')->will($this->returnValue('foo'));
+			
+			$this->container
+				->setProxyBuilder($builder)
+				->addMapping('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation')
+				->proxyType('BlueShiftTests\Foo');
+			
+			self::assertEquals('foo', $this->container->resolve('BlueShiftTests\Foo'));
+		}
+		
+		public function testAddInterceptorToCache() {
+			$interceptor = $this->getMock('BlueShift\Interceptor');
+			$this->container->registerInterceptor($interceptor, function($x) { return true; });
+			self::assertEquals(1, count(InterceptorCache::getInterceptors(new ReflectionMethod($interceptor, 'onBeforeMethodCall'))));
 		}
 	
 	}

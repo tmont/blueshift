@@ -108,7 +108,7 @@
 		<echo level="info">Running test suite: ${test.suite}</echo>
 		<echo level="debug">Component: ${component}</echo>
 		<exec executable="phpunit${exe.suffix}" failonerror="true">
-			<env key="PHPMVC_COMPONENT" value="${component}"/>
+			<env key="BLUESHIFT_COMPONENT" value="${component}"/>
 			<arg line="--log-junit ${build.artifacts}/phpunit-log.xml"/>
 			<arg line="--bootstrap ${dir.tests}/bootstrap.php"/>
 			<arg line="${test.suite}"/>
