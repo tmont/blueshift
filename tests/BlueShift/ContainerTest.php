@@ -22,7 +22,7 @@
 		}
 		
 		public function testSerialization() {
-			$this->container->addMapping('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation');
+			$this->container->registerType('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation');
 			$this->container->resolve('BlueShiftTests\Foo');
 			
 			$mappings = $this->container->getMappings();
@@ -37,9 +37,9 @@
 			self::assertEquals($dependencyGraph, $container->getDependencyGraph());
 		}
 	
-		public function testCannotAddMappingOfWrongType() {
+		public function testCannotRegisterTypeOfWrongType() {
 			$this->setExpectedException('BlueShift\RegistrationException');
-			$this->container->addMapping('BlueShiftTests\Foo', 'stdClass');
+			$this->container->registerType('BlueShiftTests\Foo', 'stdClass');
 		}
 	
 		public function testCannotRegisterInstanceOfWrongType() {
@@ -61,7 +61,7 @@
 		}
 		
 		public function testResolveMappedType() {
-			$this->container->addMapping('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation');
+			$this->container->registerType('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation');
 			$resolvedInstance = $this->container->resolve('BlueShiftTests\Foo');
 			self::assertType('BlueShiftTests\FooImplementation', $resolvedInstance);
 		}
@@ -110,7 +110,7 @@
 			
 			$this->container
 				->setProxyBuilder($builder)
-				->addMapping('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation')
+				->registerType('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation')
 				->proxyType('BlueShiftTests\Foo');
 			
 			self::assertEquals('foo', $this->container->resolve('BlueShiftTests\Foo'));

@@ -1,5 +1,13 @@
 <?php
 
+	/**
+	 * Container
+	 *
+	 * @package   BlueShift
+	 * @version   1.0
+	 * @copyright (c) 2010 Tommy Montgomery
+	 */
+
 	namespace BlueShift;
 
 	use InvalidArgumentException, ReflectionClass, Serializable, Closure;
@@ -21,7 +29,7 @@
 		/**
 		 * Sets the object to be used for creating proxies
 		 *
-		 * @param  ProxyBuilder
+		 * @param  ProxyBuilder $builder
 		 * @return Container
 		 */
 		public final function setProxyBuilder(ProxyBuilder $builder) {
@@ -70,20 +78,36 @@
 			$this->dependencyGraph = $data['dependencyGraph'];
 		}
 		
-		protected final function addTypeMapping($abstract, $concrete) {
-			$this->typeMappings[$abstract] = $concrete;
+		/**
+		 * @param string $typeToResolve
+		 * @param string $typeToCreate
+		 */
+		protected final function addTypeMapping($typeToResolve, $typeToCreate) {
+			$this->typeMappings[$typeToResolve] = $typeToCreate;
 		}
 		
-		protected final function getMapping($abstract) {
-			return @$this->typeMappings[$abstract];
+		/**
+		 * @param  string $typeToResolve
+		 * @return string|null The type to create, or null if no mapping exists
+		 */
+		protected final function getMapping($typeToResolve) {
+			return @$this->typeMappings[$typeToResolve];
 		}
 
-		protected final function addInstance($abstract, $instance) {
-			$this->registeredInstances[$abstract] = $instance;
+		/**
+		 * @param string $typeToResolve
+		 * @param object $instance
+		 */
+		protected final function addInstance($typeToResolve, $instance) {
+			$this->registeredInstances[$typeToResolve] = $instance;
 		}
 		
-		protected final function getInstance($abstract) {
-			return @$this->registeredInstances[$abstract];
+		/**
+		 * @param  string $typeToResolve
+		 * @return object|null The registered instance, or null if no mapping exists
+		 */
+		protected final function getInstance($typeToResolve) {
+			return @$this->registeredInstances[$typeToResolve];
 		}
 		
 		/**
@@ -112,7 +136,7 @@
 		 *
 		 * @uses    InterceptorCache::registerInterceptor()
 		 * @param   Interceptor $interceptor Interceptor implementation to register
-		 * @param   Closure     $matcher     Predicate that takes a ReflectionClass as an argument and returns a boolean
+		 * @param   Closure     $matcher     Predicate that takes a ReflectionMethod as an argument and returns a boolean
 		 * @returns Container
 		 */
 		public function registerInterceptor(Interceptor $interceptor, Closure $matcher) {
@@ -125,42 +149,44 @@
 		 * implementation. The concrete implementation will be dynamically created
 		 * when the specified type is resolved.
 		 *
-		 * @param   string $abstract The class or interface to be resolved
-		 * @param   string $concrete The class that will be instantiated
+		 * @uses    ReflectionCache::getClass()
+		 * @param   string $typeToResolve
+		 * @param   string $typeToCreate
 		 * @throws  {@link RegistrationException} if the concrete type does not derive from or implement the given class or interface
 		 * @returns Container
 		 */
-		public function addMapping($abstract, $concrete) {
-			$refClass = ReflectionCache::getClass($concrete);
-			if (!$refClass->implementsInterface($abstract) && !$refClass->isSubclassOf($abstract)) {
-				throw new RegistrationException('The type ' . $concrete  . ' does not inherit from or implement ' . $abstract);
+		public function registerType($typeToResolve, $typeToCreate) {
+			$refClass = ReflectionCache::getClass($typeToCreate);
+			if (!$refClass->implementsInterface($typeToResolve) && !$refClass->isSubclassOf($typeToResolve)) {
+				throw new RegistrationException('The type ' . $typeToCreate  . ' does not inherit from or implement ' . $typeToResolve);
 			}
 			
-			$this->addTypeMapping($abstract, $concrete);
+			$this->addTypeMapping($typeToResolve, $typeToCreate);
 			return $this;
 		}
 
 		/**
-		 * Registers a specific instance of an class or interface so that when
+		 * Registers a specific instance of a class or interface so that when
 		 * that class or interface is resolved it will return this specific instance
 		 *
-		 * @param   string $abstract The class or interface to map the instance to
+		 * @uses    ReflectionCache::getClass()
+		 * @param   string $typeToResolve
 		 * @param   object $instance
 		 * @throws  InvalidArgumentException
 		 * @throws  {@link RegistrationException} if the instance does not derive from or implement the given class or interface
 		 * @returns Container
 		 */
-		public function registerInstance($abstract, $instance) {
+		public function registerInstance($typeToResolve, $instance) {
 			if (!is_object($instance)) {
 				throw new InvalidArgumentException('2nd argument must be an object');
 			}
 			
-			$refClass = ReflectionCache::getClass(get_class($instance));
-			if (!$refClass->implementsInterface($abstract) && !$refClass->isSubclassOf($abstract)) {
-				throw new RegistrationException('The class ' . get_class($instance)  . ' does not inherit from or implement ' . $abstract);
+			$class = ReflectionCache::getClass(get_class($instance));
+			if (!$class->implementsInterface($typeToResolve) && !$class->isSubclassOf($typeToResolve)) {
+				throw new RegistrationException('The class ' . get_class($instance)  . ' does not inherit from or implement ' . $typeToResolve);
 			}
 
-			$this->addInstance($abstract, $instance);
+			$this->addInstance($typeToResolve, $instance);
 			return $this;
 		}
 
@@ -168,9 +194,12 @@
 		 * Builds the dependency graph for the specified type and checks for cyclic
 		 * dependencies
 		 *
+		 * @uses   ReflectionCache::getConstructor()
+		 * @uses   ReflectionUtil::getConstructorSignature()
+		 * @uses   buildDependencyGraphForType()
 		 * @param  string $type
 		 * @throws {@link InvalidConstructorException}
-		 * @throws {@link DependencyException}
+		 * @throws {@link DependencyException} if a cyclic dependency was detected
 		 */
 		protected final function buildDependencyGraphForType($type) {
 			$constructor = ReflectionCache::getConstructor($type);
@@ -212,6 +241,10 @@
 		 * a normal type that was mapped. In short, this method will resolve
 		 * unmapped types that are able to be constructed.
 		 *
+		 * @uses   buildDependencyGraphForType()
+		 * @uses   ReflectionCache::getClass()
+		 * @uses   ReflectionCache::getConstructor()
+		 * @uses   ProxyBuilder::build()
 		 * @param  string $type
 		 * @throws {@link ResolutionException}
 		 * @return object An instance of the specified type
