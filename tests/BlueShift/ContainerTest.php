@@ -105,11 +105,11 @@
 		}
 		
 		public function testResolveUsingProxybuilder() {
-			$builder = $this->getMock('BlueShift\ProxyBuilder', array('build'));
+			$builder = $this->getMock('BlueShift\ObjectBuilder');
 			$builder->expects($this->once())->method('build')->will($this->returnValue('foo'));
 			
 			$this->container
-				->setProxyBuilder($builder)
+				->setObjectBuilder($builder)
 				->registerType('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation')
 				->proxyType('BlueShiftTests\Foo');
 			

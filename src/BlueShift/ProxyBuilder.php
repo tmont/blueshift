@@ -17,7 +17,7 @@
 	 *
 	 * @package BlueShift
 	 */
-	class ProxyBuilder {
+	class ProxyBuilder implements ObjectBuilder {
 		
 		private $proxyCache = array();
 		

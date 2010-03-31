@@ -23,27 +23,27 @@
 		private $typeMappings = array();
 		private $registeredInstances = array();
 		private $dependencyGraph = array();
-		private $proxyBuilder;
+		private $objectBuilder;
 		private $typesToProxy = array();
 
 		/**
 		 * Sets the object to be used for creating proxies
 		 *
-		 * @param  ProxyBuilder $builder
+		 * @param  ObjectBuilder $builder
 		 * @return Container
 		 */
-		public final function setProxyBuilder(ProxyBuilder $builder) {
-			$this->proxyBuilder = $builder;
+		public final function setObjectBuilder(ObjectBuilder $builder) {
+			$this->objectBuilder = $builder;
 			return $this;
 		}
 		
 		/**
-		 * Gets the injected proxy builder, or creates a default one
+		 * Gets the injected proxy builder, or creates a default {@link ProxyBuilder}
 		 *
-		 * @return ProxyBuilder
+		 * @return ObjectBuilder
 		 */
-		public final function getProxyBuilder() {
-			return $this->proxyBuilder ?: ($this->proxyBuilder = new ProxyBuilder());
+		public final function getObjectBuilder() {
+			return $this->objectBuilder ?: ($this->objectBuilder = new ProxyBuilder());
 		}
 		
 		/**
@@ -281,7 +281,7 @@
 			}
 			
 			if (in_array($type, $this->typesToProxy)) {
-				return $this->getProxyBuilder()->build($class, $args);
+				return $this->getObjectBuilder()->build($class, $args);
 			}
 			
 			return ($constructor === null) ? $class->newInstance() : $class->newInstanceArgs($args);
