@@ -5,7 +5,7 @@
 	<property file="./properties/dir.properties" prefix="dir"/>
 	<property environment="env"/>
 
-	<target name="all" depends="lint, coverage, doc, archive" description="Runs lint, coverage, docs and archive"/>
+	<target name="all" depends="lint, coverage, archive" description="Runs lint, coverage, docs and archive"/>
 	
 	<target name="archive" depends="set-product-revision" description="Creates gzipped archives for deployment">
 		<delete dir="${build.dist}"/>
@@ -53,23 +53,6 @@
 		</exec>
 	</target>
 	
-	<target name="doc" depends="set-exe-suffix" description="Generates documentation using phpdoc">
-		<delete dir="${build.doc}"/>
-		<mkdir dir="${build.doc}"/>
-		
-		<exec executable="phpdoc${exe.suffix}" failonerror="true">
-			<arg line="--directory"/>
-			<arg value="${dir.src}"/>
-			<arg line="--target"/>
-			<arg value="${build.doc}"/>
-			<arg line="-ue on"/>
-			<arg line="--title"/>
-			<arg value="${product.name}"/>
-			<arg line="-pp on"/>
-			<!--arg line="-s on"/-->
-		</exec>
-	</target>
-	
 	<target name="help" depends="set-exe-suffix" description="Displays information about available targets">
 		<exec executable="ant${exe.suffix}" failonerror="true">
 			<arg value="-p"/>
@@ -95,12 +78,10 @@
 			<arg value="${dir.src}"/>
 			<arg line="--recursive"/>
 			<arg line="--stub"/>
-			<arg value="${dir.src}/PhpMvc/bootstrap.php"/>
-			<arg value="${build.dist}/phpmvc.phar"/>
+			<arg value="${dir.src}/BlueShift/bootstrap.php"/>
+			<arg value="${build.dist}/blueshift.phar"/>
 		</exec>
 	</target>
-	
-	<target name="precommit" depends="lint, test" description="Runs lint and all unit tests"/>
 	
 	<target name="test" depends="set-exe-suffix, test-set-suite" description="Runs all unit tests">
 		<mkdir dir="${build.artifacts}"/>
@@ -119,20 +100,18 @@
 		<exec executable="php" failonerror="true">
 			<arg line="${dir.tools}/metainfobuilder.php"/>
 			<arg line="--target"/>
-			<arg line="${dir.src}/BlueShift/Util/MetaInfo.php"/>
+			<arg line="${dir.src}/BlueShift/MetaInfo.php"/>
 			<arg line="--author"/>
 			<arg value="${product.author}"/>
 			<arg line="--name"/>
 			<arg value="${product.name}"/>
 			<arg line="--version"/>
 			<arg value="${product.version}"/>
-			<arg line="--since"/>
-			<arg line="0.1"/>
 			<arg line="--website"/>
 			<arg value="${product.website}"/>
 		</exec>
 		
-		<echo level="info">Wrote to ${dir.src}/BlueShift/Util/MetaInfo.php</echo>
+		<echo level="info">Wrote to ${dir.src}/BlueShift/MetaInfo.php</echo>
 	</target>
 	
 	<!-- 

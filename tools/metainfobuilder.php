@@ -24,7 +24,6 @@
 	         ->addSwitch(new CliSwitch('version', 'v',  true,  'version #', 'Product version'))
 	         ->addSwitch(new CliSwitch('author',  'a',  true,  'name',      'Product author'))
 	         ->addSwitch(new CliSwitch('website', 'w',  true,  'site',      'Product website'))
-	         ->addSwitch(new CliSwitch('since',   's',  true,  'version #', 'Value for @since tag in documentation'))
 	         ->addSwitch(new CliSwitch('help',    'h',  false, null,        'Display this help message (also --usage)'))
 	         ->addSwitch(new CliSwitch('usage',   null, false, null,        'Display this help message (also --help)'));
 
@@ -43,59 +42,53 @@
 <?php
 
 	/**
-	 * @package    BlueShift
-	 * @subpackage Util
-	 * @since      $options[since]
-	 * @copyright  © 2010 Tommy Montgomery
-	 * @link       $options[website]
+	 * @package   BlueShift
+	 * @version   $options[version]
+	 * @copyright © 2010 Tommy Montgomery
+	 * @link      $options[website]
 	 */
-	
-	namespace BlueShift\Util;
-	
+
+	namespace BlueShift;
+
 	/**
 	 * Provides meta information about BlueShift
 	 *
-	 * @package    BlueShift
-	 * @subpackage Utilities
-	 * @since      $options[since]
+	 * @package BlueShift
 	 */
 	final class MetaInfo {
-		
+
 		//@codeCoverageIgnoreStart
-		/**
-		 * @ignore
-		 */
 		private function __construct() {}
 		//@codeCoverageIgnoreEnd
-		
+
 		/**
 		 * The product version
 		 *
 		 * @var string
 		 */
 		const VERSION    = '$options[version]';
-		
+
 		/**
 		 * The product author
 		 *
 		 * @var string
 		 */
 		const AUTHOR     = '$options[author]';
-		
+
 		/**
 		 * The full product name
 		 *
 		 * @var string
 		 */
 		const NAME       = '$options[name]';
-		
+
 		/**
 		 * The build date (Y-m-d H:i:s P)
 		 *
 		 * @var string
 		 */
 		const BUILD_DATE = '$date';
-		
+
 	}
 
 ?>
