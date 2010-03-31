@@ -1,17 +1,31 @@
 <?php
 
+	/**
+	 * ProxyBuilder
+	 *
+	 * @package   BlueShift
+	 * @version   1.0
+	 * @copyright (c) 2010 Tommy Montgomery
+	 */
+
 	namespace BlueShift;
 	
 	use ReflectionClass, ReflectionMethod, ReflectionParameter;
 	
 	/**
-	 * Class that dynamically builds interceptable proxies
+	 * Class for dynamically building interceptable proxies
 	 *
 	 * @package BlueShift
 	 */
 	class ProxyBuilder {
 		
 		private $proxyCache = array();
+		
+		/**
+		 * The namespace that the proxy is contained within
+		 *
+		 * @var string
+		 */
 		const DEFAULT_NAMESPACE = 'BlueShift';
 		
 		/**
@@ -57,10 +71,19 @@
 			return $name;
 		}
 		
-		private function buildProxy(ReflectionClass $class) {
+		/**
+		 * Creates a proxy definition and eval()s it
+		 *
+		 * @uses   generateClassName()
+		 * @uses   buildNamespaceDeclaration()
+		 * @uses   buildClassDefinition()
+		 * @param  ReflectionClass $class
+		 * @return string The name of the generated class
+		 */
+		protected final function buildProxy(ReflectionClass $class) {
 			$name = $this->generateClassName($class);
 			
-			$code = $this->buildNamespace($class);
+			$code = $this->buildNamespaceDeclaration($class);
 			$code .= $this->buildClassDefinition($class, $name);
 			
 			eval($code);
@@ -68,11 +91,25 @@
 			return self::DEFAULT_NAMESPACE . '\\' . $name;
 		}
 		
-		private function buildNamespace(ReflectionClass $class) {
+		/**
+		 * Builds the code needed for the namespace declaration
+		 *
+		 * @param  ReflectionClass $class
+		 * @return string Literal PHP code
+		 */
+		protected function buildNamespaceDeclaration(ReflectionClass $class) {
 			return "namespace BlueShift;\nuse ReflectionMethod, Exception;\n\n";
 		}
 		
-		private function buildClassDefinition(ReflectionClass $class, $className) {
+		/**
+		 * Builds the code needed for a class
+		 *
+		 * @uses   buildMethod()
+		 * @param  ReflectionClass $class
+		 * @param  string          $className The name of the proxy
+		 * @return string Literal PHP code
+		 */
+		protected function buildClassDefinition(ReflectionClass $class, $className) {
 			$code = "class $className extends \\" . $class->getName() . " {\n";
 			
 			foreach ($class->getMethods() as $method) {
@@ -87,7 +124,14 @@
 			return $code;
 		}
 		
-		private function buildMethod(ReflectionMethod $method) {
+		/**
+		 * Builds the code needed for a method
+		 *
+		 * @uses   buildMethodParameter()
+		 * @param  ReflectionMethod $method
+		 * @return string Literal PHP code
+		 */
+		protected function buildMethod(ReflectionMethod $method) {
 			$code = "\t";
 			$code .= $method->isPublic() ? 'public ' : 'protected ';
 			$code .= $method->isStatic() ? 'static ' : '';
@@ -142,7 +186,13 @@ METHODBODY;
 			return $code;
 		}
 		
-		private function buildMethodParameter(ReflectionParameter $parameter) {
+		/**
+		 * Builds the code needed for a method parameter
+		 *
+		 * @param  ReflectionParameter $parameter
+		 * @return string Literal PHP code
+		 */
+		protected final function buildMethodParameter(ReflectionParameter $parameter) {
 			$code = '';
 			if ($parameter->isArray()) {
 				$code .= 'array';

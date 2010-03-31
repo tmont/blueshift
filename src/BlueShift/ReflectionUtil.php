@@ -1,19 +1,48 @@
 <?php
 
+	/**
+	 * ReflectionUtil
+	 *
+	 * @package   BlueShift
+	 * @version   1.0
+	 * @copyright (c) 2010 Tommy Montgomery
+	 */
+
 	namespace BlueShift;
 	
 	use ReflectionClass, ReflectionMethod, Reflector;
 
+	/**
+	 * Reflection utilities
+	 *
+	 * @package BlueShift
+	 */
 	final class ReflectionUtil {
 
 		//@codeCoverageIgnoreStart
 		private function __construct() {}
 		//@codeCoverageIgnoreEnd
 
+		/**
+		 * Determines if the specified class is able to be proxied
+		 *
+		 * Proxyable classes are non-final and instantiable
+		 *
+		 * @param  ReflectionClass $class
+		 * @return bool
+		 */
 		public static function isProxyable(ReflectionClass $class) {
 			return !$class->isFinal() && $class->isInstantiable();
 		}
 		
+		/**
+		 * Gets an array representation of a constructor's signature, with the
+		 * keys being the parameter name and the values being name of the type or null
+		 * if the parameter is not typehinted
+		 *
+		 * @param  ReflectionMethod $constructor
+		 * @return array
+		 */
 		public static function getConstructorSignature(ReflectionMethod $constructor) {
 			$params = $constructor->getParameters();
 			$signature = array();
@@ -26,8 +55,9 @@
 		}
 
 		/**
-		 * Stolen from PHP MVC code: PhpMvc\Util\ReflectionHelper
+		 * Stolen from PHP MVC. Gets the values of a doc comment
 		 *
+		 * @link   http://svn.tommymontgomery.com/phpmvc/src/trunk/src/PhpMvc/Util/ReflectionHelper.php
 		 * @param  Reflector $reflector
 		 * @return array
 		 */

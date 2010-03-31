@@ -1,31 +1,54 @@
 <?php
 
+	/**
+	 * InterceptorCache
+	 *
+	 * @package   BlueShift
+	 * @version   1.0
+	 * @copyright (c) 2010 Tommy Montgomery
+	 */
+
 	namespace BlueShift;
 
 	use Closure, ReflectionMethod;
 	
+	/**
+	 * Cache for interceptors so that repeated retrieval is not hideously slow
+	 *
+	 * All interceptor registration should go through the {@link Container}.
+	 *
+	 * @package BlueShift
+	 */
 	final class InterceptorCache {
 		
 		private static $interceptors = array();
 		private static $cache = array();
 		
+		/**
+		 * Registers an interceptor in the cache
+		 *
+		 * @param Interceptor $interceptor
+		 * @param Closure     $matcher     Function that takes a ReflectionMethod as an argument and returns a boolean
+		 */
 		public static function registerInterceptor(Interceptor $interceptor, Closure $matcher) {
 			self::$interceptors[] = array('interceptor' => $interceptor, 'matcher' => $matcher);
 		}
 		
-		public static function rebuildCache() {
+		/**
+		 * Resets this object, used for testing
+		 * @ignore
+		 */
+		public static function reset() {
 			self::$cache = array();
-		}
-		
-		public static function purge() {
 			self::$interceptors = array();
 		}
 		
-		public static function reset() {
-			self::rebuildCache();
-			self::purge();
-		}
-		
+		/**
+		 * Gets all interceptors for the specified method invocation
+		 *
+		 * @param  ReflectionMethod $method
+		 * @return array
+		 */
 		public static function getInterceptors(ReflectionMethod $method) {
 			$key = $method->getDeclaringClass()->getName() . '::' . $method->getName();
 			
