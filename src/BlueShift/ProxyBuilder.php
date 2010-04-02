@@ -86,6 +86,9 @@
 			$code = $this->buildNamespaceDeclaration($class);
 			$code .= $this->buildClassDefinition($class, $name);
 			
+			
+			//echo '<xmp>' . $code . '</xmp>'; exit;
+			
 			eval($code);
 			
 			return self::DEFAULT_NAMESPACE . '\\' . $name;
@@ -199,7 +202,7 @@ METHODBODY;
 			} else {
 				$class = $parameter->getClass();
 				if ($class instanceof ReflectionClass) {
-					$code .= $class->getName();
+					$code .= '\\' . $class->getName();
 				}
 			}
 			

@@ -276,7 +276,7 @@
 			$constructor = ReflectionCache::getConstructor($type);
 			$args = array();
 			if ($constructor !== null) {
-				$that = $this;
+				$that = $this; //lulz
 				$args = array_map(function($dependency) use ($that) { return $that->resolve($dependency); }, $this->dependencyGraph[$type]);
 			}
 			
