@@ -108,6 +108,7 @@
 		 * Builds the code needed for a class
 		 *
 		 * @uses   buildMethod()
+		 * @uses   ReflectionUtil::methodIsProxyable()
 		 * @param  ReflectionClass $class
 		 * @param  string          $className The name of the proxy
 		 * @return string Literal PHP code
@@ -116,7 +117,7 @@
 			$code = "class $className extends \\" . $class->getName() . " {\n";
 			
 			foreach ($class->getMethods() as $method) {
-				if ($method->isPrivate() || $method->isFinal()) {
+				if (!ReflectionUtil::methodIsProxyable($method)) {
 					continue;
 				}
 				
