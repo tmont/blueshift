@@ -264,7 +264,7 @@
 			//check if the type has a mapping
 			$concreteType = $this->getMapping($type);
 			if ($concreteType === null) {
-				//if it's instantiable, add it to the dependency graph
+				//if it's unmapped and instantiable it's okay
 				$class = ReflectionCache::getClass($type);
 				if (!$class->isInstantiable()) {
 					throw new ResolutionException("The type $type has not been mapped and is not instantiable");
