@@ -5,8 +5,6 @@
 	 *
 	 * @package Cli
 	 * @author  Tommy Montgomery
-	 * @version 1.0
-	 * @since   1.0
 	 */
 
 	/**
@@ -14,18 +12,9 @@
 	 *
 	 * @package Cli
 	 * @author  Tommy Montgomery
-	 * @version 1.0
-	 * @since   1.0
 	 */
 	class Cli {
 		
-		/**
-		 * Constructor
-		 *
-		 * @author  Tommy Montgomery
-		 * @version 1.0
-		 * @since   1.0
-		 */
 		private function __construct() {}
 		
 		/**
@@ -72,8 +61,6 @@
 	 *
 	 * @package Cli
 	 * @author  Tommy Montgomery
-	 * @version 1.0
-	 * @since   1.0
 	 */
 	class CliSwitch {
 		
@@ -113,12 +100,6 @@
 		public $description;
 		
 		/**
-		 * Constructor
-		 *
-		 * @author  Tommy Montgomery
-		 * @version 1.0
-		 * @since   1.0
-		 * 
 		 * @param  string $longName
 		 * @param  string $shortName
 		 * @param  bool   $required
@@ -139,8 +120,6 @@
 	 *
 	 * @package Cli
 	 * @author  Tommy Montgomery
-	 * @version 1.0
-	 * @since   1.0
 	 */
 	class CliSwitchCollection implements IteratorAggregate {
 		
@@ -154,13 +133,6 @@
 		 */
 		private $switchArg;
 		
-		/**
-		 * Constructor
-		 *
-		 * @author  Tommy Montgomery
-		 * @version 1.0
-		 * @since   1.0
-		 */
 		public function __construct() {
 			$this->switches  = array();
 			$this->switchArg = null;
@@ -169,10 +141,6 @@
 		/**
 		 * Adds a switch to the collection
 		 *
-		 * @author  Tommy Montgomery
-		 * @version 1.0
-		 * @since   1.0
-		 * 
 		 * @param  CliSwitch $switch
 		 * @return CliSwitchCollection
 		 */
@@ -189,10 +157,6 @@
 		/**
 		 * Gets a switch by its short or long name
 		 *
-		 * @author  Tommy Montgomery
-		 * @version 1.0
-		 * @since   1.0
-		 * 
 		 * @param  string $longOrShortName
 		 * @return CliSwitch|null
 		 */
@@ -209,10 +173,6 @@
 		/**
 		 * Segregates the switches into required and optional
 		 *
-		 * @author  Tommy Montgomery
-		 * @version 1.0
-		 * @since   1.0
-		 * 
 		 * @return array Array with keys "required" and "optional"
 		 */
 		public function segregateSwitches() {
@@ -234,10 +194,6 @@
 		/**
 		 * Gets the switch representing the arguments
 		 *
-		 * @author  Tommy Montgomery
-		 * @version 1.0
-		 * @since   1.0
-		 * 
 		 * @return CliSwitch
 		 */
 		public function getSwitchArg() {
@@ -246,10 +202,6 @@
 		
 		/**
 		 * Gets an iterator
-		 *
-		 * @author  Tommy Montgomery
-		 * @version 1.0
-		 * @since   1.0
 		 * 
 		 * @return ArrayIterator
 		 */
@@ -264,8 +216,6 @@
 	 *
 	 * @package Cli
 	 * @author  Tommy Montgomery
-	 * @version 1.0
-	 * @since   1.0
 	 */
 	class Usage {
 		
@@ -315,12 +265,6 @@
 		const LINE_LENGTH = 80;
 		
 		/**
-		 * Constructor
-		 *
-		 * @author  Tommy Montgomery
-		 * @version 1.0
-		 * @since   1.0
-		 * 
 		 * @param  string $name
 		 * @param  string $script
 		 * @param  string $description
@@ -340,15 +284,6 @@
 		}
 		
 		/**
-		 * Magic function __get
-		 *
-		 * @author  Tommy Montgomery
-		 * @version 1.0
-		 * @since   1.0
-		 * 
-		 * @param  mixed $key
-		 * @throws InvalidArgumentException
-		 * @return mixed
 		 * @ignore
 		 */
 		public function __get($key) {
@@ -362,12 +297,9 @@
 		/**
 		 * Sets the switch collection
 		 *
-		 * @author  Tommy Montgomery
-		 * @version 1.0
-		 * @since   1.0
-		 * @uses    CliSwitchCollection::getIterator()
+		 * @uses CliSwitchCollection::getIterator()
 		 * 
-		 * @param  CliSwitchCollection $switches
+		 * @param CliSwitchCollection $switches
 		 */
 		public function setSwitches(CliSwitchCollection $switches) {
 			$this->switches = $switches;
@@ -391,10 +323,7 @@
 		/**
 		 * Gets a string representation of this object
 		 *
-		 * @author  Tommy Montgomery
-		 * @version 1.0
-		 * @since   1.0
-		 * @uses    CliSwitchCollection::segregateSwitches()
+		 * @uses CliSwitchCollection::segregateSwitches()
 		 * 
 		 * @return string
 		 */

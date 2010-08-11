@@ -69,7 +69,6 @@
 	
 	$iterator = new NegativeIterator($iterator);
 	
-	
 	$phar = new Phar($target);
 	$phar->buildFromIterator(new RecursiveIteratorIterator($iterator), $prefix);
 	
