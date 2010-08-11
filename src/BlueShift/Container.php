@@ -11,6 +11,10 @@
 	namespace BlueShift;
 
 	use InvalidArgumentException, ReflectionClass, Serializable, Closure;
+	use Phroxy\ObjectBuilder;
+	use Phroxy\ProxyBuilder;
+	use Phroxy\Interceptor;
+	use Phroxy\InterceptorCache;
 
 	/**
 	 * Represents a container for creating objects and automatically

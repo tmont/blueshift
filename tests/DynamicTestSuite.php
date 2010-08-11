@@ -4,38 +4,40 @@
 	 * Dynamically runs a bunch of tests under a directory, or a single
 	 * test
 	 *
-	 * This script determines which tests to run based on the PHPMVC_COMPONENT
+	 * This script determines which tests to run based on the TEST_COMPONENT
 	 * environment variable. Normally, this script is run from the shell,
 	 * and the environment variable is only around as long as the shell
 	 * is open.
-	 *
-	 * @package BlueShiftTests
-	 * @since   1.0
 	 */
 	
-	namespace BlueShiftTests;
+	namespace Phatality\Tests;
 
-	$path = getenv('BLUESHIFT_COMPONENT');
-	if (empty($path)) {
-		fwrite(STDERR, 'Environment variable "BLUESHIFT_COMPONENT" is not set');
+	$path = getenv('TEST_COMPONENT');
+	$projectName = getenv('PROJECT_NAMESPACE');
+	if (empty($path) || empty($projectName)) {
+		fwrite(STDERR, 'Environment variables "TEST_COMPONENT" and "PROJECT_NAMESPACE" must be set to a non-empty value');
 		exit(1);
 	}
-	
-	$baseDir         = dirname(dirname(__FILE__));
+
+	$baseDir         = dirname(__DIR__);
 	$testsDir        = $baseDir . DIRECTORY_SEPARATOR . 'tests';
-	$GLOBALS['path'] = $testsDir . DIRECTORY_SEPARATOR . 'BlueShift' . DIRECTORY_SEPARATOR . $path;
-	
+	$GLOBALS['path'] = $testsDir . DIRECTORY_SEPARATOR . $projectName . DIRECTORY_SEPARATOR . $path;
+
 	if (!is_dir($GLOBALS['path'])) {
 		$tempPath = $GLOBALS['path'] . 'Test.php';
+		$tempPath2 = $GLOBALS['path'] . 'Tests.php';
 		if (is_file($tempPath)) {
 			$GLOBALS['path'] = $tempPath;
-			unset($tempPath);
+			unset($tempPath, $tempPath2);
+		} else if (is_file($tempPath2)) {
+			$GLOBALS['path'] = $tempPath2;
+			unset($tempPath, $tempPath2);
 		} else {
 			fwrite(STDERR, $GLOBALS['path'] . ' is neither a directory nor a file');
 			exit(1);
 		}
 	}
-	
+
 	\PHPUnit_Util_Filter::addFileToFilter(__FILE__, 'PHPUNIT');
 
 	//iterates over all the files in the directory, and require_onces's them
@@ -46,27 +48,27 @@
 			if (
 				$file->isFile() &&
 				strpos($file->getPathName(), DIRECTORY_SEPARATOR . '.') === false &&
-				preg_match('/Test\.php$/', $file->getFileName())
+				preg_match('/Tests?\.php$/', $file->getFileName())
 			) {
 				$testClass = ltrim(str_replace($testsDir, '', $file->getPathName()), DIRECTORY_SEPARATOR . '/');
-				$testClass = str_replace('BlueShift\\', 'BlueShiftTests\\', $testClass);
+				$testClass = str_replace("$projectName\\", "$projectName\\Tests\\", $testClass);
 				$testClass = substr($testClass, 0, -4);
 				$GLOBALS['test_classes'][] = $testClass;
 				require_once $file->getPathname();
 			}
 		}
-		
+
 		unset($file);
 	} else {
 		require_once $GLOBALS['path'];
 		$testClass = ltrim(str_replace($testsDir, '', $GLOBALS['path']), DIRECTORY_SEPARATOR . '/');
-		$testClass = str_replace('BlueShift\\', 'BlueShiftTests\\', $testClass);
+		$testClass = str_replace("$projectName\\", "$projectName\\Tests\\", $testClass);
 		$testClass = substr($testClass, 0, -4);
 		$GLOBALS['test_classes'][] = $testClass;
 	}
-	
+
 	unset($baseDir, $testsDir, $path);
-	
+
 	if (empty($GLOBALS['test_classes'])) {
 		fwrite(STDERR, 'No test classes found');
 		exit(1);
@@ -75,13 +77,9 @@
 	/**
 	 * Dynamically runs a bunch of tests under a directory, or a single
 	 * test
-	 *
-	 * @package BlueShiftTests
-	 * @since   0.1
-	 * @version 0.1
 	 */
 	class DynamicTestSuite {
-		
+
 		/**
 		 * Creates a test suite
 		 *
@@ -89,14 +87,14 @@
 		 */
 		public static function suite() {
 			$suite = new \PHPUnit_Framework_TestSuite('Tests From ' . $GLOBALS['path']);
-			
+
 			foreach ($GLOBALS['test_classes'] as $class) {
 				$suite->addTestSuite($class);
 			}
-			
+
 			return $suite;
 		}
-		
+
 	}
 
 ?>

@@ -7,18 +7,13 @@
 
 	<target name="all" depends="lint, coverage, archive" description="Runs lint, coverage, docs and archive"/>
 	
-	<target name="archive" depends="set-product-revision" description="Creates gzipped archives for deployment">
+	<target name="archive" depends="init, set-product-revision" description="Creates gzipped archives for deployment">
 		<delete dir="${build.dist}"/>
 		<mkdir dir="${build.dist}"/>
 		
 		<!-- just library -->
 		<tar destfile="${build.dist}/${product.shortname}-${product.version}.${product.revision}.tar.gz"  compression="gzip"> 
-			<tarfileset dir="${dir.src}" includes="PhpMvc/**"/>
-		</tar>
-		
-		<!-- source code -->
-		<tar destfile="${build.dist}/${product.shortname}-${product.version}.${product.revision}-src.tar.gz"  compression="gzip"> 
-			<tarfileset dir="${basedir}" excludes="build/**,dist/**"/>
+			<tarfileset dir="${dir.src}" includes="Phatality/**"/>
 		</tar>
 	</target>
 	
@@ -27,14 +22,15 @@
 		<delete dir="${build.dist}"/>
 	</target>
 	
-	<target name="coverage" depends="set-exe-suffix, test-set-suite" description="Runs unit tests and calculates code coverage">
+	<target name="coverage" depends="init, set-exe-suffix, test-set-suite" description="Runs unit tests and calculates code coverage">
 		<delete dir="${build.coverage}"/>
 		<mkdir dir="${build.coverage}"/>
 		
 		<echo level="info">Running test suite: ${test.suite}</echo>
 		<echo level="debug">Component: ${component}</echo>
 		<exec executable="phpunit${exe.suffix}" failonerror="true">
-			<env key="BLUESHIFT_COMPONENT" value="${component}"/>
+			<env key="TEST_COMPONENT" value="${component}"/>
+			<env key="PROJECT_NAMESPACE" value="${product.namespace}"/>
 			<arg line="--log-junit ${build.artifacts}/phpunit-log.xml"/>
 			<arg line="--coverage-clover ${build.artifacts}/phpunit-coverage.xml"/>
 			<arg line="--coverage-html ${build.coverage}"/>
@@ -43,7 +39,7 @@
 		</exec>
 	</target>
 	
-	<target name="dependencies" depends="set-exe-suffix" description="Generates dependency graphs and reports">
+	<target name="dependencies" depends="init, set-exe-suffix" description="Generates dependency graphs and reports">
 		<mkdir dir="${build.artifacts}"/>
 		<exec executable="pdepend${exe.suffix}" failonerror="true">
 			<arg line="--summary-xml=${build.artifacts}/pdepend.xml"/>
@@ -53,7 +49,7 @@
 		</exec>
 	</target>
 	
-	<target name="help" depends="set-exe-suffix" description="Displays information about available targets">
+	<target name="help" depends="init, set-exe-suffix" description="Displays information about available targets">
 		<exec executable="ant${exe.suffix}" failonerror="true">
 			<arg value="-p"/>
 		</exec>
@@ -70,7 +66,7 @@
 	
 	<target name="phar" depends="init" description="Generates a phar archive">
 		<mkdir dir="${build.dist}"/>
-		<delete file="${build.dist}/phpmvc.phar"/>
+		<delete file="${build.dist}/blueshift.phar"/>
 		
 		<exec executable="php" failonerror="true">
 			<arg value="${dir.tools}/pharbuilder.php"/>
@@ -78,40 +74,23 @@
 			<arg value="${dir.src}"/>
 			<arg line="--recursive"/>
 			<arg line="--stub"/>
-			<arg value="${dir.src}/BlueShift/bootstrap.php"/>
-			<arg value="${build.dist}/blueshift.phar"/>
+			<arg value="${dir.src}/${product.namespace}/bootstrap.php"/>
+			<arg value="${build.dist}/${product.shortname}.phar"/>
 		</exec>
 	</target>
 	
-	<target name="test" depends="set-exe-suffix, test-set-suite" description="Runs all unit tests">
+	<target name="test" depends="init, set-exe-suffix, test-set-suite" description="Runs all unit tests">
 		<mkdir dir="${build.artifacts}"/>
 		
 		<echo level="info">Running test suite: ${test.suite}</echo>
 		<echo level="debug">Component: ${component}</echo>
 		<exec executable="phpunit${exe.suffix}" failonerror="true">
-			<env key="BLUESHIFT_COMPONENT" value="${component}"/>
+			<env key="TEST_COMPONENT" value="${component}"/>
+			<env key="PROJECT_NAMESPACE" value="${product.namespace}"/>
 			<arg line="--log-junit ${build.artifacts}/phpunit-log.xml"/>
 			<arg line="--bootstrap ${dir.tests}/bootstrap.php"/>
 			<arg line="${test.suite}"/>
 		</exec>
-	</target>
-	
-	<target name="meta" depends="init" description="Generates MetaInfo.php">
-		<exec executable="php" failonerror="true">
-			<arg line="${dir.tools}/metainfobuilder.php"/>
-			<arg line="--target"/>
-			<arg line="${dir.src}/BlueShift/MetaInfo.php"/>
-			<arg line="--author"/>
-			<arg value="${product.author}"/>
-			<arg line="--name"/>
-			<arg value="${product.name}"/>
-			<arg line="--version"/>
-			<arg value="${product.version}"/>
-			<arg line="--website"/>
-			<arg value="${product.website}"/>
-		</exec>
-		
-		<echo level="info">Wrote to ${dir.src}/BlueShift/MetaInfo.php</echo>
 	</target>
 	
 	<!-- 

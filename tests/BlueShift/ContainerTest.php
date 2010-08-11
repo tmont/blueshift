@@ -1,11 +1,11 @@
 <?php
 
-	namespace BlueShiftTests;
+	namespace BlueShift\Tests;
 	
 	use BlueShift\Container;
 	use stdClass;
 	use ReflectionClass, ReflectionMethod;
-	use BlueShift\InterceptorCache;
+	use Phroxy\InterceptorCache;
 
 	class ContainerTest extends \PHPUnit_Framework_TestCase {
 
@@ -22,8 +22,8 @@
 		}
 		
 		public function testSerialization() {
-			$this->container->registerType('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation');
-			$this->container->resolve('BlueShiftTests\Foo');
+			$this->container->registerType('BlueShift\Tests\Foo', 'BlueShift\Tests\FooImplementation');
+			$this->container->resolve('BlueShift\Tests\Foo');
 			
 			$mappings = $this->container->getMappings();
 			$dependencyGraph = $this->container->getDependencyGraph();
@@ -39,49 +39,49 @@
 	
 		public function testCannotRegisterTypeOfWrongType() {
 			$this->setExpectedException('BlueShift\RegistrationException');
-			$this->container->registerType('BlueShiftTests\Foo', 'stdClass');
+			$this->container->registerType('BlueShift\Tests\Foo', 'stdClass');
 		}
 	
 		public function testCannotRegisterInstanceOfWrongType() {
 			$this->setExpectedException('BlueShift\RegistrationException');
-			$this->container->registerInstance('BlueShiftTests\Foo', new stdClass());
+			$this->container->registerInstance('BlueShift\Tests\Foo', new stdClass());
 		}
 		
 		public function testRegisterInstanceMustBeAnActualInstance() {
 			$this->setExpectedException('InvalidArgumentException');
-			$this->container->registerInstance('BlueShiftTests\Foo', 'not an object');
+			$this->container->registerInstance('BlueShift\Tests\Foo', 'not an object');
 		}
 		
 		public function testResolveInstance() {
 			$instance = new FooImplementation();
-			$this->container->registerInstance('BlueShiftTests\Foo', $instance);
-			$resolvedInstance = $this->container->resolve('BlueShiftTests\Foo');
+			$this->container->registerInstance('BlueShift\Tests\Foo', $instance);
+			$resolvedInstance = $this->container->resolve('BlueShift\Tests\Foo');
 			
 			self::assertSame($instance, $resolvedInstance);
 		}
 		
 		public function testResolveMappedType() {
-			$this->container->registerType('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation');
-			$resolvedInstance = $this->container->resolve('BlueShiftTests\Foo');
-			self::assertType('BlueShiftTests\FooImplementation', $resolvedInstance);
+			$this->container->registerType('BlueShift\Tests\Foo', 'BlueShift\Tests\FooImplementation');
+			$resolvedInstance = $this->container->resolve('BlueShift\Tests\Foo');
+			self::assertType('BlueShift\Tests\FooImplementation', $resolvedInstance);
 		}
 		
 		public function testResolveUnmappedUninstantiableType() {
 			$this->setExpectedException('BlueShift\ResolutionException');
-			$this->container->resolve('BlueShiftTests\Foo');
+			$this->container->resolve('BlueShift\Tests\Foo');
 		}
 		
 		public function testResolveUnmappedInstantiableType() {
-			$resolvedInstance = $this->container->resolve('BlueShiftTests\FooImplementation');
-			self::assertType('BlueShiftTests\FooImplementation', $resolvedInstance);
+			$resolvedInstance = $this->container->resolve('BlueShift\Tests\FooImplementation');
+			self::assertType('BlueShift\Tests\FooImplementation', $resolvedInstance);
 		}
 
 		public function testResolveTypeWithNonPublicConstructor() {
 			$this->setExpectedException(
 				'BlueShift\InvalidConstructorException',
-				'The type BlueShiftTests\BadConstructor has a non-public constructor and will not be able to be resolved'
+				'The type BlueShift\Tests\BadConstructor has a non-public constructor and will not be able to be resolved'
 			);
-			$this->container->resolve('BlueShiftTests\BadConstructor');
+			$this->container->resolve('BlueShift\Tests\BadConstructor');
 		}
 		
 		public function testResolveTypeWithInvalidConstructorSignature() {
@@ -93,31 +93,31 @@
 		}
 		
 		public function testResolveTypeWithDependencies() {
-			$baz = $this->container->resolve('BlueShiftTests\Baz');
-			self::assertType('BlueShiftTests\Baz', $baz);
-			self::assertType('BlueShiftTests\Bar', $baz->bar);
-			self::assertType('BlueShiftTests\FooImplementation', $baz->bar->foo);
+			$baz = $this->container->resolve('BlueShift\Tests\Baz');
+			self::assertType('BlueShift\Tests\Baz', $baz);
+			self::assertType('BlueShift\Tests\Bar', $baz->bar);
+			self::assertType('BlueShift\Tests\FooImplementation', $baz->bar->foo);
 		}
 		
 		public function testResolveTypeWithACyclicDependency() {
-			$this->setExpectedException('BlueShift\DependencyException', 'A cyclic dependency was detected between BlueShiftTests\Cyclic2 and BlueShiftTests\Cyclic1');
-			$this->container->resolve('BlueShiftTests\Cyclic1');
+			$this->setExpectedException('BlueShift\DependencyException', 'A cyclic dependency was detected between BlueShift\Tests\Cyclic2 and BlueShift\Tests\Cyclic1');
+			$this->container->resolve('BlueShift\Tests\Cyclic1');
 		}
 		
 		public function testResolveUsingProxybuilder() {
-			$builder = $this->getMock('BlueShift\ObjectBuilder');
+			$builder = $this->getMock('Phroxy\ObjectBuilder');
 			$builder->expects($this->once())->method('build')->will($this->returnValue('foo'));
 			
 			$this->container
 				->setObjectBuilder($builder)
-				->registerType('BlueShiftTests\Foo', 'BlueShiftTests\FooImplementation')
-				->proxyType('BlueShiftTests\Foo');
+				->registerType('BlueShift\Tests\Foo', 'BlueShift\Tests\FooImplementation')
+				->proxyType('BlueShift\Tests\Foo');
 			
-			self::assertEquals('foo', $this->container->resolve('BlueShiftTests\Foo'));
+			self::assertEquals('foo', $this->container->resolve('BlueShift\Tests\Foo'));
 		}
 		
 		public function testAddInterceptorToCache() {
-			$interceptor = $this->getMock('BlueShift\Interceptor');
+			$interceptor = $this->getMock('Phroxy\Interceptor');
 			$this->container->registerInterceptor($interceptor, function($x) { return true; });
 			self::assertEquals(1, count(InterceptorCache::getInterceptors(new ReflectionMethod($interceptor, 'onBeforeMethodCall'))));
 		}

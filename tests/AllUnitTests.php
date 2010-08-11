@@ -1,15 +1,14 @@
 <?php
 
-	/**
-	 * Runs all unit tests under the tests directory
-	 *
-	 * @package BlueShiftTests
-	 * @since   0.1
-	 */
-	
-	namespace BlueShiftTests;
+	namespace Phatality\Tests;
 
-	$baseDir  = dirname(__DIR__);
+	$projectName = getenv('PROJECT_NAMESPACE');
+	if (empty($projectName)) {
+		fwrite(STDERR, 'Environment variable "PROJECT_NAMESPACE" must be set to a non-empty value');
+		exit(1);
+	}
+
+	$baseDir  = dirname(dirname(__FILE__));
 	$testsDir = $baseDir . DIRECTORY_SEPARATOR . 'tests';
 	$srcDir   = $baseDir . DIRECTORY_SEPARATOR . 'src';
 	
@@ -21,25 +20,22 @@
 	foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($testsDir)) as $file) {
 		if (
 			$file->isFile() && 
-			strpos($file->getPathName(), $testsDir . DIRECTORY_SEPARATOR . 'BlueShift') === 0 &&
+			strpos($file->getPathName(), $testsDir . DIRECTORY_SEPARATOR . $projectName) === 0 &&
 			strpos($file->getPathName(), DIRECTORY_SEPARATOR . '.') === false && 
-			preg_match('/Test\.php$/', $file->getFileName())
+			preg_match('/Tests?\.php$/', $file->getFileName())
 		) {
 			$testClass = ltrim(str_replace($testsDir, '', $file->getPathName()), DIRECTORY_SEPARATOR . '/');
-			$testClass = str_replace('BlueShift\\', 'BlueShiftTests\\', $testClass);
+			$testClass = str_replace("$projectName\\", "$projectName\\Tests\\", $testClass);
 			$testClass = substr($testClass, 0, -4);
 			$GLOBALS['test_classes'][] = $testClass;
 			require_once $file->getPathname();
 		}
 	}
 	
-	unset($testsDir, $srcDir, $baseDir, $file, $testClass);
+	unset($projectName, $testsDir, $srcDir, $baseDir, $file, $testClass);
 
 	/**
 	 * Test suite that runs all unit tests
-	 *
-	 * @package BlueShiftTests
-	 * @since   0.1
 	 */
 	class AllUnitTests {
 		
@@ -49,7 +45,7 @@
 		 * @return PHPUnit_Framework_TestSuite
 		 */
 		public static function suite() {
-			$suite = new \PHPUnit_Framework_TestSuite('All Blue Shift Unit Tests');
+			$suite = new \PHPUnit_Framework_TestSuite('All Unit tests');
 			
 			foreach ($GLOBALS['test_classes'] as $class) {
 				$suite->addTestSuite($class);
