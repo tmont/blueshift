@@ -45,7 +45,7 @@ Registering a type and an instance:
 ```php
 $container = new Tmont\BlueShift\Container();
 $container
-  ->registerType('MyType')
+  ->registerType('MyType', 'MyType')
   ->registerInstance('MyOtherType', new MyOtherType('bar'));
 
 $myType = $container->resolve('MyType');
@@ -87,8 +87,8 @@ class MyInterceptor implements Interceptor {
 
 $container = new Tmont\BlueShift\Container();
 $container
-  ->registerType('MyInterceptableClass')
-  ->proxyType('MyType')
+  ->registerType('MyInterceptableClass', 'MyInterceptableClass')
+  ->proxyType('MyInterceptableClass')
   ->registerInterceptor(new MyInterceptor(), function(ReflectionMethod $method) {
 	    return $method->getDeclaringClass()->getName() === 'MyInterceptableClass' &&
 	        $method->getName() === 'foo';
@@ -98,6 +98,20 @@ $obj = $container->resolve('MyInterceptableClass');
 echo $obj->foo(); // 'intercepted!'
 ```
 
+The container can also resolve anything you give it, even if you don't
+explicitly create a mapping, provided the type is instantiable.
+
+```php
+class Nope {
+	private function __construct() {}
+}
+
+class Yup {}
+
+$container = new Tmont\BlueShift\Container();
+$container->resolve('Yup'); //no probalo
+$container->resolve('Nope'); //throws InvalidConstructorException
+```
 
 ## Development
 ```bash
