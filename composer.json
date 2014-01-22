@@ -1,0 +1,28 @@
+{
+	"name": "tmont/blueshift",
+	"description": "Simple inversion of control container",
+	"keywords": [ "container", "inversion", "control", "dependency", "injection" ],
+	"license": "WTFPL",
+	"authors": [
+		{
+			"name": "Tommy Montgomery",
+			"email": "tmont@tmont.com",
+			"homepage": "http://tmont.com/",
+			"role": "Developer"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/tmont/blueshift/issues",
+		"source": "https://github.com/tmont/blueshift"
+	},
+
+	"require-dev": {
+		"phpunit/phpunit": "3.7.*"
+	},
+
+	"autoload": {
+		"psr-4": {
+			"Tmont\\BlueShift\\": "src"
+		}
+	}
+}

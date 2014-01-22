@@ -8,13 +8,13 @@
 	 * @copyright (c) 2010 Tommy Montgomery
 	 */
 
-	namespace BlueShift;
+	namespace Tmont\BlueShift;
 
-	use InvalidArgumentException, ReflectionClass, Serializable, Closure;
-	use Phroxy\ObjectBuilder;
-	use Phroxy\ProxyBuilder;
-	use Phroxy\Interceptor;
-	use Phroxy\InterceptorCache;
+	use InvalidArgumentException, Serializable, Closure;
+	use Tmont\Phroxy\ObjectBuilder;
+	use Tmont\Phroxy\ProxyBuilder;
+	use Tmont\Phroxy\Interceptor;
+	use Tmont\Phroxy\InterceptorCache;
 
 	/**
 	 * Represents a container for creating objects and automatically
@@ -49,11 +49,12 @@
 		public final function getObjectBuilder() {
 			return $this->objectBuilder ?: ($this->objectBuilder = new ProxyBuilder());
 		}
-		
+
 		/**
 		 * Informs the container to create a proxy of this type when it is resolved.
 		 * This must be called regardless of whether any interceptors are registered.
 		 *
+		 * @param string $type
 		 * @return Container
 		 */
 		public final function proxyType($type) {

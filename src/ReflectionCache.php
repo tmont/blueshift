@@ -8,7 +8,7 @@
 	 * @copyright (c) 2010 Tommy Montgomery
 	 */
 
-	namespace BlueShift;
+	namespace Tmont\BlueShift;
 	
 	use ReflectionClass;
 
@@ -47,7 +47,7 @@
 		 * Gets or creates a ReflectionMethod for the specified type's constructor
 		 *
 		 * @param  string $type
-		 * @return ReflectionMethod|null Null if the type has no constructor
+		 * @return \ReflectionMethod|null Null if the type has no constructor
 		 */
 		public static function getConstructor($type) {
 			if (!array_key_exists($type, self::$constructors)) {

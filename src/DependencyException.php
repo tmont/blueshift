@@ -8,7 +8,7 @@
 	 * @copyright (c) 2010 Tommy Montgomery
 	 */
 
-	namespace BlueShift;
+	namespace Tmont\BlueShift;
 
 	use Exception;
 	
