@@ -14,7 +14,7 @@
 		<delete dir="${build.coverage}"/>
 		<mkdir dir="${build.coverage}"/>
 		
-		<exec executable="${basedir}/phpunit" failonerror="true">
+		<exec executable="${basedir}/vendor/bin/phpunit" failonerror="true">
 			<arg line="--coverage-clover ${build.artifacts}/phpunit-coverage.xml"/>
 			<arg line="--coverage-html ${build.coverage}"/>
 		</exec>

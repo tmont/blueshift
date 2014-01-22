@@ -16,6 +16,10 @@
 		"source": "https://github.com/tmont/blueshift"
 	},
 
+	"require": {
+		"tmont/phroxy": "1.1.0"
+	},
+
 	"require-dev": {
 		"phpunit/phpunit": "3.7.*"
 	},
